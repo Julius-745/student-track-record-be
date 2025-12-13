@@ -1,0 +1,26 @@
+# compiled output
+/dist
+/node_modules
+
+# logs
+yarn-debug.log*
+yarn-error.log*
+npm-debug.log*
+pnpm-debug.log*
+
+# environment variables
+.env
+.env.production
+.env.development
+.env.test
+
+# jest
+/coverage
+
+# misc
+.DS_Store
+*.swp
+.idea
+.vscode
+
+DATA SISWA KELAS 7 2025-2026.xlsx
