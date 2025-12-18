@@ -1,4 +1,5 @@
-import { Controller, Post, Body, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Body, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from './jwt-auth.guard';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
@@ -14,6 +15,7 @@ export class AuthController {
     return this.authService.login(user);
   }
   
+  @UseGuards(JwtAuthGuard)
   @Post('logout')
   async logout() {
     return { message: 'Logged out' };

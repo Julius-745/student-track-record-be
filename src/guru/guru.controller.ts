@@ -1,6 +1,13 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, Query, UseGuards } from '@nestjs/common';
+import { Roles } from 'src/auth/roles.decorator';
+import { Role } from 'src/auth/roles.enum';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { GuruService } from './guru.service';
+import { RolesGuard } from 'src/auth/roles.guard';
 
+
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.ADMIN)
 @Controller('guru')
 export class GuruController {
   constructor(private readonly guruService: GuruService) {}
