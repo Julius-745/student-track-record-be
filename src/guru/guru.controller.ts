@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, Query } from '@nestjs/common';
 import { GuruService } from './guru.service';
 
 @Controller('guru')
@@ -6,8 +6,12 @@ export class GuruController {
   constructor(private readonly guruService: GuruService) {}
 
   @Get()
-  findAll() {
-    return this.guruService.findAll();
+  findAll(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+    @Query('search') search?: string,
+  ) {
+    return this.guruService.findAll(Number(page), Number(limit), search);
   }
 
   @Get(':id')

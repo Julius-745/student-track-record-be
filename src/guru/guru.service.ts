@@ -10,8 +10,40 @@ export class GuruService {
     private readonly guruRepository: Repository<Guru>,
   ) {}
 
-  findAll() {
-    return this.guruRepository.find();
+  async findAll(page: number = 1, limit: number = 10, search?: string) {
+    const queryBuilder = this.guruRepository.createQueryBuilder('guru');
+    
+    if (search) {
+      queryBuilder.andWhere(
+        '(guru.nama ILIKE :search OR guru.nipd ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit)
+      .orderBy('guru.nama', 'ASC');
+
+    const [data, total] = await queryBuilder.getManyAndCount();
+
+    if (data.length === 0) {
+      throw new NotFoundException('No Guru found matching the criteria');
+    }
+    
+    if (total === 0) {
+      throw new NotFoundException('No Guru found');
+    }
+
+    return ({
+      data,
+      meta: {
+        total,
+        page,
+        last_page: Math.ceil(total / limit),
+        limit,
+      },
+    });
   }
 
   async findOne(id: string) {

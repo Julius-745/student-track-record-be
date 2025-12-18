@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, Query } from '@nestjs/common';
 import { PelaporanService } from './pelaporan.service';
 
 @Controller('pelaporan')
@@ -6,8 +6,12 @@ export class PelaporanController {
   constructor(private readonly pelaporanService: PelaporanService) {}
 
   @Get()
-  findAll() {
-    return this.pelaporanService.findAll();
+  findAll(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+    @Query('search') search?: string,
+  ) {
+    return this.pelaporanService.findAll(Number(page), Number(limit), search);
   }
 
   @Get(':id')

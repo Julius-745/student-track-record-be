@@ -16,8 +16,42 @@ export class PelaporanService {
     private readonly guruRepository: Repository<Guru>,
   ) {}
 
-  findAll() {
-    return this.pelaporanRepository.find({ relations: ['siswa', 'guru'] });
+  async findAll(page: number = 1, limit: number = 10, search?: string) {
+    const queryBuilder = this.pelaporanRepository.createQueryBuilder('pelaporan')
+      .leftJoinAndSelect('pelaporan.siswa', 'siswa')
+      .leftJoinAndSelect('pelaporan.guru', 'guru');
+
+    if (search) {
+      queryBuilder.andWhere(
+        '(siswa.nama ILIKE :search OR guru.nama ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit)
+      .orderBy('pelaporan.created_at', 'DESC');
+
+    const [data, total] = await queryBuilder.getManyAndCount();
+
+    if (data.length === 0) {
+      throw new NotFoundException('No Pelaporan found matching the criteria');
+    }
+
+    if (total === 0) {
+      throw new NotFoundException('No Pelaporan found');
+    }
+
+    return ({
+      data,
+      meta: {
+        total,
+        page,
+        last_page: Math.ceil(total / limit),
+        limit,
+      },
+    });
   }
 
   async findOne(id: string) {
