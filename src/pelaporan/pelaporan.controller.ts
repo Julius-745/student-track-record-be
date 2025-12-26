@@ -1,6 +1,19 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { PelaporanService } from './pelaporan.service';
+import { CreatePelaporanDto } from './dto/create-pelaporan.dto';
+import { UpdatePelaporanDto } from './dto/update-pelaporan.dto';
+import { PelaporanQueryDto } from './dto/pelaporan-query.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('pelaporan')
@@ -8,12 +21,8 @@ export class PelaporanController {
   constructor(private readonly pelaporanService: PelaporanService) {}
 
   @Get()
-  findAll(
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
-    @Query('search') search?: string,
-  ) {
-    return this.pelaporanService.findAll(Number(page), Number(limit), search);
+  findAll(@Query() query: PelaporanQueryDto) {
+    return this.pelaporanService.findAll(query.page, query.limit, query.search);
   }
 
   @Get(':id')
@@ -22,13 +31,13 @@ export class PelaporanController {
   }
 
   @Post()
-  create(@Body() createPelaporanDto: any) {
-    return this.pelaporanService.create(createPelaporanDto);
+  create(@Body() dto: CreatePelaporanDto) {
+    return this.pelaporanService.create(dto);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() updatePelaporanDto: any) {
-    return this.pelaporanService.update(id, updatePelaporanDto);
+  update(@Param('id') id: string, @Body() dto: UpdatePelaporanDto) {
+    return this.pelaporanService.update(id, dto);
   }
 
   @Delete(':id')

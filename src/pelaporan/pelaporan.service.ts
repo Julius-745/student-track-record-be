@@ -17,7 +17,8 @@ export class PelaporanService {
   ) {}
 
   async findAll(page: number = 1, limit: number = 10, search?: string) {
-    const queryBuilder = this.pelaporanRepository.createQueryBuilder('pelaporan')
+    const queryBuilder = this.pelaporanRepository
+      .createQueryBuilder('pelaporan')
       .leftJoinAndSelect('pelaporan.siswa', 'siswa')
       .leftJoinAndSelect('pelaporan.guru', 'guru');
 
@@ -35,29 +36,21 @@ export class PelaporanService {
 
     const [data, total] = await queryBuilder.getManyAndCount();
 
-    if (data.length === 0) {
-      throw new NotFoundException('No Pelaporan found matching the criteria');
-    }
-
-    if (total === 0) {
-      throw new NotFoundException('No Pelaporan found');
-    }
-
-    return ({
+    return {
       data,
       meta: {
         total,
         page,
-        last_page: Math.ceil(total / limit),
+        last_page: Math.ceil(total / limit) || 1,
         limit,
       },
-    });
+    };
   }
 
   async findOne(id: string) {
-    const pelaporan = await this.pelaporanRepository.findOne({ 
+    const pelaporan = await this.pelaporanRepository.findOne({
       where: { id },
-      relations: ['siswa', 'guru']
+      relations: ['siswa', 'guru'],
     });
     if (!pelaporan) {
       throw new NotFoundException(`Pelaporan with ID ${id} not found`);
@@ -68,14 +61,17 @@ export class PelaporanService {
   async create(createDto: any) {
     const { siswa_id, guru_id, ...rest } = createDto;
 
-    const siswa = await this.siswaRepository.findOne({ where: { id: siswa_id } });
+    const siswa = await this.siswaRepository.findOne({
+      where: { id: siswa_id },
+    });
     if (!siswa) throw new NotFoundException(`Siswa ${siswa_id} not found`);
-    
+
     // Guru is optional in some contexts but usually required for reporting
     let guru: Guru | null = null;
     if (guru_id) {
-       guru = await this.guruRepository.findOne({ where: { id: guru_id } });
-       if (!guru && guru_id) throw new NotFoundException(`Guru ${guru_id} not found`);
+      guru = await this.guruRepository.findOne({ where: { id: guru_id } });
+      if (!guru && guru_id)
+        throw new NotFoundException(`Guru ${guru_id} not found`);
     }
 
     const pelaporan = this.pelaporanRepository.create({
@@ -83,13 +79,13 @@ export class PelaporanService {
       siswa,
       guru,
     });
-    
+
     return this.pelaporanRepository.save(pelaporan);
   }
 
   async update(id: string, updateDto: any) {
     const pelaporan = await this.findOne(id);
-    
+
     // Handle relation updates if needed, for now just update basic fields
     this.pelaporanRepository.merge(pelaporan, updateDto);
     return this.pelaporanRepository.save(pelaporan);

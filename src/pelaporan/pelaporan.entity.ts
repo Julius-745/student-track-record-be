@@ -1,4 +1,11 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+} from 'typeorm';
 import { Siswa } from '../siswa/siswa.entity';
 import { Guru } from '../guru/guru.entity';
 
@@ -26,8 +33,6 @@ export class Pelaporan {
 
   @Column({ name: 'deskripsi_pelaporan', type: 'text' })
   deskripsi: string;
-
-
 
   @Column({ type: 'date' })
   tanggal: string;

@@ -12,7 +12,7 @@ export class GuruService {
 
   async findAll(page: number = 1, limit: number = 10, search?: string) {
     const queryBuilder = this.guruRepository.createQueryBuilder('guru');
-    
+
     if (search) {
       queryBuilder.andWhere(
         '(guru.nama ILIKE :search OR guru.nipd ILIKE :search)',
@@ -30,12 +30,12 @@ export class GuruService {
     if (data.length === 0) {
       throw new NotFoundException('No Guru found matching the criteria');
     }
-    
+
     if (total === 0) {
       throw new NotFoundException('No Guru found');
     }
 
-    return ({
+    return {
       data,
       meta: {
         total,
@@ -43,7 +43,7 @@ export class GuruService {
         last_page: Math.ceil(total / limit),
         limit,
       },
-    });
+    };
   }
 
   async findOne(id: string) {

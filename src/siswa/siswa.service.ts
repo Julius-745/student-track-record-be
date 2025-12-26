@@ -10,7 +10,12 @@ export class SiswaService {
     private readonly siswaRepository: Repository<Siswa>,
   ) {}
 
-  async findAll(page: number = 1, limit: number = 10, search?: string, rombel?: string) {
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+    rombel?: string,
+  ) {
     const queryBuilder = this.siswaRepository.createQueryBuilder('siswa');
 
     if (search) {

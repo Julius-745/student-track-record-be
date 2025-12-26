@@ -1,10 +1,22 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { Role } from 'src/auth/roles.enum';
 import { SiswaService } from './siswa.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-
+import { CreateSiswaDto } from './dto/create-siswa.dto';
+import { UpdateSiswaDto } from './dto/update-siswa.dto';
+import { SiswaQueryDto } from './dto/siswa-query.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.ADMIN)
@@ -13,13 +25,13 @@ export class SiswaController {
   constructor(private readonly siswaService: SiswaService) {}
 
   @Get()
-  findAll(
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
-    @Query('search') search?: string,
-    @Query('rombel') rombel?: string,
-  ) {
-    return this.siswaService.findAll(Number(page), Number(limit), search, rombel);
+  findAll(@Query() query: SiswaQueryDto) {
+    return this.siswaService.findAll(
+      query.page,
+      query.limit,
+      query.search,
+      query.rombel,
+    );
   }
 
   @Get(':id')
@@ -28,13 +40,13 @@ export class SiswaController {
   }
 
   @Post()
-  create(@Body() createSiswaDto: any) {
-    return this.siswaService.create(createSiswaDto);
+  create(@Body() dto: CreateSiswaDto) {
+    return this.siswaService.create(dto);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateSiswaDto: any) {
-    return this.siswaService.update(id, updateSiswaDto);
+  update(@Param('id') id: string, @Body() dto: UpdateSiswaDto) {
+    return this.siswaService.update(id, dto);
   }
 
   @Delete(':id')
