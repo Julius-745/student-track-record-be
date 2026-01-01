@@ -20,6 +20,7 @@ import { Roles } from './roles.decorator';
 import { Role } from './roles.enum';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDTO } from './dto/refresh.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { GenerateResetTokenDto } from './dto/generate-reset-token.dto';
@@ -48,6 +49,17 @@ export class AuthController {
       throw new UnauthorizedException('Invalid credentials');
     }
     return this.authService.login(user);
+  }
+
+  @Post('refresh')
+  @ApiOperation({ summary: 'Refresh access token' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns new access token and user data',
+  })
+  @ApiResponse({ status: 401, description: 'Invalid refresh token' })
+  async refresh(@Body() refreshTokenDto: RefreshTokenDTO) {
+    return this.authService.refresh(refreshTokenDto.refreshToken);
   }
 
   @UseGuards(JwtAuthGuard)

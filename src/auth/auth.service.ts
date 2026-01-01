@@ -37,12 +37,39 @@ export class AuthService {
     return null;
   }
 
-  login(user: Omit<Guru, 'password'>) {
+  async login(user: Omit<Guru, 'password'>) {
     const payload = { username: user.email, sub: user.id, role: user.role };
     return {
-      accessToken: this.jwtService.sign(payload),
+      accessToken: this.jwtService.sign(payload, { expiresIn: '1h' }),
+      refreshToken: this.jwtService.sign(payload, { expiresIn: '7d' }),
       user: user,
     };
+  }
+
+  async refresh(refreshToken: string) {
+    try {
+      const payload = this.jwtService.verify(refreshToken);
+      const user = await this.guruService.findOne(payload.sub);
+
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password, ...userWithoutPassword } = user;
+      const newPayload = {
+        username: user.email,
+        sub: user.id,
+        role: user.role,
+      };
+
+      return {
+        accessToken: this.jwtService.sign(newPayload, { expiresIn: '1h' }),
+        user: userWithoutPassword,
+      };
+    } catch (e) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
   }
 
   /**

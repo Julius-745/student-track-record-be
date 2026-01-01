@@ -13,6 +13,12 @@ async function bootstrap() {
     new FastifyAdapter(),
   );
 
+  // Register cookie plugin
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  await app.register(require('@fastify/cookie'), {
+    secret: process.env.COOKIE_SECRET || 'cookie-secret', // for signed cookies
+  });
+
   // Enable CORS
   app.enableCors();
 

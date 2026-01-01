@@ -10,14 +10,18 @@ export class GuruService {
     private readonly guruRepository: Repository<Guru>,
   ) {}
 
-  async findAll(page: number = 1, limit: number = 10, search?: string) {
+  async findAll(page: number = 1, limit: number = 10, search?: string, role?: string) {
     const queryBuilder = this.guruRepository.createQueryBuilder('guru');
 
     if (search) {
       queryBuilder.andWhere(
-        '(guru.nama ILIKE :search OR guru.nipd ILIKE :search)',
+        '(guru.nama ILIKE :search OR guru.nip ILIKE :search)',
         { search: `%${search}%` },
       );
+    }
+
+    if (role) {
+      queryBuilder.andWhere('guru.role = :role', { role });
     }
 
     queryBuilder

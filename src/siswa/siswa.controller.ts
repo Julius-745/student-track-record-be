@@ -19,7 +19,6 @@ import { UpdateSiswaDto } from './dto/update-siswa.dto';
 import { SiswaQueryDto } from './dto/siswa-query.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.ADMIN)
 @Controller('siswa')
 export class SiswaController {
   constructor(private readonly siswaService: SiswaService) {}
@@ -33,22 +32,25 @@ export class SiswaController {
       query.rombel,
     );
   }
-
+  
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.siswaService.findOne(id);
   }
 
+  @Roles(Role.ADMIN)
   @Post()
   create(@Body() dto: CreateSiswaDto) {
     return this.siswaService.create(dto);
   }
 
+  @Roles(Role.ADMIN)
   @Put(':id')
   update(@Param('id') id: string, @Body() dto: UpdateSiswaDto) {
     return this.siswaService.update(id, dto);
   }
 
+  @Roles(Role.ADMIN)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.siswaService.remove(id);

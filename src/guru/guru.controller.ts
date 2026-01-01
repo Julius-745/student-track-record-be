@@ -9,6 +9,9 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { UpdateGuruDto } from './dto/update-guru.dto';
+import { CreateGuruDto } from './dto/create-guru.dto';
+import { GuruQueryDto } from './dto/guru-query.dto';
 import { Roles } from 'src/auth/roles.decorator';
 import { Role } from 'src/auth/roles.enum';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -22,12 +25,13 @@ export class GuruController {
   constructor(private readonly guruService: GuruService) {}
 
   @Get()
-  findAll(
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
-    @Query('search') search?: string,
-  ) {
-    return this.guruService.findAll(Number(page), Number(limit), search);
+  findAll(@Query() query: GuruQueryDto) {
+    return this.guruService.findAll(
+      query.page, 
+      query.limit, 
+      query.search, 
+      query.role
+    );
   }
 
   @Get(':id')
@@ -36,13 +40,13 @@ export class GuruController {
   }
 
   @Post()
-  create(@Body() createGuruDto: any) {
-    return this.guruService.create(createGuruDto);
+  create(@Body() dto: CreateGuruDto) {
+    return this.guruService.create(dto);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateGuruDto: any) {
-    return this.guruService.update(id, updateGuruDto);
+  update(@Param('id') id: string, @Body() dto: UpdateGuruDto) {
+    return this.guruService.update(id, dto);
   }
 
   @Delete(':id')

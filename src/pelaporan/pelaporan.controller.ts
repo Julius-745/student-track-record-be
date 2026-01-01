@@ -22,7 +22,7 @@ export class PelaporanController {
 
   @Get()
   findAll(@Query() query: PelaporanQueryDto) {
-    return this.pelaporanService.findAll(query.page, query.limit, query.search);
+    return this.pelaporanService.findAll(query.page, query.limit, query.search, query.jenis_pelaporan);
   }
 
   @Get(':id')
