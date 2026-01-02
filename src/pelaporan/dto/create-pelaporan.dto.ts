@@ -10,5 +10,5 @@ export class CreatePelaporanDto extends BasePelaporanDto {
   @ApiPropertyOptional({ example: 'uuid-guru' })
   @IsUUID()
   @IsOptional()
-  guru_id?: string;
+  guru_id: string;
 }

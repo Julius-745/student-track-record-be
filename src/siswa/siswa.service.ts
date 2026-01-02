@@ -15,6 +15,8 @@ export class SiswaService {
     limit: number = 10,
     search?: string,
     rombel?: string,
+    orderBy: string = 'nama',
+    order: 'ASC' | 'DESC' = 'ASC',
   ) {
     const queryBuilder = this.siswaRepository.createQueryBuilder('siswa');
 
@@ -29,10 +31,13 @@ export class SiswaService {
       queryBuilder.andWhere('siswa.rombel = :rombel', { rombel });
     }
 
+    // Ensure orderBy is prefixed with 'siswa.' if not already
+    const sortField = orderBy.includes('.') ? orderBy : `siswa.${orderBy}`;
+
     queryBuilder
       .skip((page - 1) * limit)
       .take(limit)
-      .orderBy('siswa.nama', 'ASC');
+      .orderBy(sortField, order);
 
     const [data, total] = await queryBuilder.getManyAndCount();
 

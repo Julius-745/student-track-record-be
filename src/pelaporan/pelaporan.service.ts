@@ -16,7 +16,14 @@ export class PelaporanService {
     private readonly guruRepository: Repository<Guru>,
   ) {}
 
-  async findAll(page: number = 1, limit: number = 10, search?: string, jenis_pelaporan?: string) {
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+    jenis_pelaporan?: string,
+    orderBy: string = 'created_at',
+    order: 'ASC' | 'DESC' = 'DESC',
+  ) {
     const queryBuilder = this.pelaporanRepository
       .createQueryBuilder('pelaporan')
       .leftJoinAndSelect('pelaporan.siswa', 'siswa')
@@ -29,14 +36,18 @@ export class PelaporanService {
       );
     }
 
-    if(jenis_pelaporan){
-      queryBuilder.andWhere('pelaporan.jenis_pelaporan = :jenis_pelaporan', { jenis_pelaporan });
+    if (jenis_pelaporan) {
+      queryBuilder.andWhere('pelaporan.jenis_pelaporan = :jenis_pelaporan', {
+        jenis_pelaporan,
+      });
     }
+
+    const sortField = orderBy.includes('.') ? orderBy : `pelaporan.${orderBy}`;
 
     queryBuilder
       .skip((page - 1) * limit)
       .take(limit)
-      .orderBy('pelaporan.created_at', 'DESC');
+      .orderBy(sortField, order);
 
     const [data, total] = await queryBuilder.getManyAndCount();
 

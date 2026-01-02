@@ -27,10 +27,12 @@ export class GuruController {
   @Get()
   findAll(@Query() query: GuruQueryDto) {
     return this.guruService.findAll(
-      query.page, 
-      query.limit, 
-      query.search, 
-      query.role
+      query.page,
+      query.limit,
+      query.search,
+      query.role,
+      query.orderBy,
+      query.order,
     );
   }
 

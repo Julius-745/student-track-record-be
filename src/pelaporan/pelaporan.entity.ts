@@ -31,7 +31,7 @@ export class Pelaporan {
   @Column({ name: 'jenis_pelaporan' })
   jenis_pelaporan: string; // 'prestasi' | 'pelanggaran'
 
-  @Column({ name: 'deskripsi_pelaporan', type: 'text' })
+  @Column({ name: 'deskripsi', type: 'text' })
   deskripsi: string;
 
   @Column({ type: 'date' })

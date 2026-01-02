@@ -10,7 +10,14 @@ export class GuruService {
     private readonly guruRepository: Repository<Guru>,
   ) {}
 
-  async findAll(page: number = 1, limit: number = 10, search?: string, role?: string) {
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+    role?: string,
+    orderBy: string = 'nama',
+    order: 'ASC' | 'DESC' = 'ASC',
+  ) {
     const queryBuilder = this.guruRepository.createQueryBuilder('guru');
 
     if (search) {
@@ -24,10 +31,12 @@ export class GuruService {
       queryBuilder.andWhere('guru.role = :role', { role });
     }
 
+    const sortField = orderBy.includes('.') ? orderBy : `guru.${orderBy}`;
+
     queryBuilder
       .skip((page - 1) * limit)
       .take(limit)
-      .orderBy('guru.nama', 'ASC');
+      .orderBy(sortField, order);
 
     const [data, total] = await queryBuilder.getManyAndCount();
 

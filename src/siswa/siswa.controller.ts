@@ -30,6 +30,8 @@ export class SiswaController {
       query.limit,
       query.search,
       query.rombel,
+      query.orderBy,
+      query.order,
     );
   }
   
