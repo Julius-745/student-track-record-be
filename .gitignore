@@ -24,3 +24,6 @@ pnpm-debug.log*
 .vscode
 
 DATA SISWA KELAS 7 2025-2026.xlsx
+
+check-password-flow.ts
+generate-link.ts

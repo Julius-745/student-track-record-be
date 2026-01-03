@@ -90,7 +90,7 @@ export class AuthService {
 
     // Token expires in 10 minutes (short-lived for in-person reset)
     const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+    expiresAt.setMinutes(expiresAt.getMinutes() + 2);
 
     // Invalidate any existing reset tokens for this user
     await this.passwordResetRepository.update(
