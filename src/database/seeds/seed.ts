@@ -46,7 +46,7 @@ const generateGuru = async (count: number) => {
 
   // Create Admin
   const admin = new Guru();
-  admin.nip = '999999999';
+  admin.nip = '9999999';
   admin.nama = 'Admin Sistem';
   admin.posisi = 'Administrator';
   admin.email = 'admin@sekolah.id';
