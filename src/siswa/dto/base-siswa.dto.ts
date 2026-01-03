@@ -37,4 +37,18 @@ export class BaseSiswaDto {
   @IsNotEmpty()
   alamat: string;
 
+  @ApiProperty({ example: 'AndiWijaya@andiwijaya.com' })
+  @IsString()
+  @IsNotEmpty()
+  email: string;
+
+  @ApiProperty({ example: 'probolinggo' })
+  @IsString()
+  @IsNotEmpty()
+  tempat_lahir: string;
+
+  @ApiProperty({ example: '2000-01-01' })
+  @IsString()
+  @IsNotEmpty()
+  tanggal_lahir: string;
 }
