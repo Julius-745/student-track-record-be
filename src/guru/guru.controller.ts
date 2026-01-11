@@ -8,7 +8,11 @@ import {
   Put,
   Query,
   UseGuards,
+  Req,
 } from '@nestjs/common';
+import { ApiConsumes, ApiBody, ApiOperation } from '@nestjs/swagger';
+import { MultipartFile } from '@fastify/multipart';
+import type { FastifyRequest } from 'fastify';
 import { UpdateGuruDto } from './dto/update-guru.dto';
 import { CreateGuruDto } from './dto/create-guru.dto';
 import { GuruQueryDto } from './dto/guru-query.dto';
@@ -44,6 +48,32 @@ export class GuruController {
   @Post()
   create(@Body() dto: CreateGuruDto) {
     return this.guruService.create(dto);
+  }
+
+  @Post('import')
+  @ApiOperation({ summary: 'Import guru from CSV file' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  async import(@Req() req: FastifyRequest) {
+    const data = await (
+      req as FastifyRequest & { file: () => Promise<MultipartFile | undefined> }
+    ).file();
+    if (data) {
+      const multipartFile = data;
+      const buffer = await multipartFile.toBuffer();
+      return this.guruService.importCsv(buffer);
+    }
+    throw new Error('File not found');
   }
 
   @Put(':id')

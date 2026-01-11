@@ -23,7 +23,7 @@ export class Pelaporan {
 
   @ManyToOne(() => Guru, (guru) => guru.pelaporans, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'id_guru' })
-  guru: Guru;
+  guru: Guru | null;
 
   @Column({ name: 'id_guru', nullable: true })
   guruId: string;

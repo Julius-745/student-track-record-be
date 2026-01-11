@@ -3,6 +3,8 @@ import {
   FastifyAdapter,
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
+import cookie from '@fastify/cookie';
+import multipart from '@fastify/multipart';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
@@ -14,9 +16,19 @@ async function bootstrap() {
   );
 
   // Register cookie plugin
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  await app.register(require('@fastify/cookie'), {
+  await app.register(cookie, {
     secret: process.env.COOKIE_SECRET || 'cookie-secret', // for signed cookies
+  });
+
+  // Register multipart plugin
+  await app.register(multipart, {
+    limits: {
+      fieldNameSize: 100, // Max field name size in bytes
+      fieldSize: 100, // Max field value size in bytes
+      fields: 10, // Max number of non-file fields
+      fileSize: 10 * 1024 * 1024, // 10MB
+      files: 1, // Max number of file fields
+    },
   });
 
   // Enable CORS

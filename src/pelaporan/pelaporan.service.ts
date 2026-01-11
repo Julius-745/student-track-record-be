@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { Pelaporan } from './pelaporan.entity';
 import { Siswa } from '../siswa/siswa.entity';
 import { Guru } from '../guru/guru.entity';
+import { CreatePelaporanDto } from './dto/create-pelaporan.dto';
+import { UpdatePelaporanDto } from './dto/update-pelaporan.dto';
 
 @Injectable()
 export class PelaporanService {
@@ -23,6 +25,8 @@ export class PelaporanService {
     jenis_pelaporan?: string,
     orderBy: string = 'created_at',
     order: 'ASC' | 'DESC' = 'DESC',
+    startDate?: string,
+    endDate?: string,
   ) {
     const queryBuilder = this.pelaporanRepository
       .createQueryBuilder('pelaporan')
@@ -40,6 +44,14 @@ export class PelaporanService {
       queryBuilder.andWhere('pelaporan.jenis_pelaporan = :jenis_pelaporan', {
         jenis_pelaporan,
       });
+    }
+
+    if (startDate) {
+      queryBuilder.andWhere('pelaporan.tanggal >= :startDate', { startDate });
+    }
+
+    if (endDate) {
+      queryBuilder.andWhere('pelaporan.tanggal <= :endDate', { endDate });
     }
 
     const sortField = orderBy.includes('.') ? orderBy : `pelaporan.${orderBy}`;
@@ -62,6 +74,37 @@ export class PelaporanService {
     };
   }
 
+  async getStats(startDate?: string, endDate?: string) {
+    const query = this.pelaporanRepository.createQueryBuilder('pelaporan');
+
+    if (startDate) {
+      query.andWhere('pelaporan.tanggal >= :startDate', { startDate });
+    }
+
+    if (endDate) {
+      query.andWhere('pelaporan.tanggal <= :endDate', { endDate });
+    }
+
+    const [totalPrestasi, totalPelanggaran] = await Promise.all([
+      query
+        .clone()
+        .andWhere('pelaporan.jenis_pelaporan = :jenis', { jenis: 'prestasi' })
+        .getCount(),
+      query
+        .clone()
+        .andWhere('pelaporan.jenis_pelaporan = :jenis', {
+          jenis: 'pelanggaran',
+        })
+        .getCount(),
+    ]);
+
+    return {
+      prestasi: totalPrestasi,
+      pelanggaran: totalPelanggaran,
+      total: totalPrestasi + totalPelanggaran,
+    };
+  }
+
   async findOne(id: string) {
     const pelaporan = await this.pelaporanRepository.findOne({
       where: { id },
@@ -73,7 +116,7 @@ export class PelaporanService {
     return pelaporan;
   }
 
-  async create(createDto: any) {
+  async create(createDto: CreatePelaporanDto) {
     const { siswa_id, guru_id, ...rest } = createDto;
 
     const siswa = await this.siswaRepository.findOne({
@@ -98,7 +141,7 @@ export class PelaporanService {
     return this.pelaporanRepository.save(pelaporan);
   }
 
-  async update(id: string, updateDto: any) {
+  async update(id: string, updateDto: UpdatePelaporanDto) {
     const pelaporan = await this.findOne(id);
 
     // Handle relation updates if needed, for now just update basic fields

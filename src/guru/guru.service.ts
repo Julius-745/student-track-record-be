@@ -2,6 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Guru } from './guru.entity';
+import { parse } from 'csv-parse';
+import { Readable } from 'stream';
+import * as bcrypt from 'bcrypt';
+import { CreateGuruDto } from './dto/create-guru.dto';
+import { UpdateGuruDto } from './dto/update-guru.dto';
 
 @Injectable()
 export class GuruService {
@@ -71,12 +76,12 @@ export class GuruService {
     return this.guruRepository.findOne({ where: { email } });
   }
 
-  async create(createGuruDto: any) {
+  async create(createGuruDto: CreateGuruDto) {
     const guru = this.guruRepository.create(createGuruDto);
     return this.guruRepository.save(guru);
   }
 
-  async update(id: string, updateGuruDto: any) {
+  async update(id: string, updateGuruDto: UpdateGuruDto) {
     const guru = await this.findOne(id);
     this.guruRepository.merge(guru, updateGuruDto);
     return this.guruRepository.save(guru);
@@ -85,5 +90,39 @@ export class GuruService {
   async remove(id: string) {
     const guru = await this.findOne(id);
     return this.guruRepository.remove(guru);
+  }
+
+  async importCsv(fileBuffer: Buffer) {
+    const results: any[] = [];
+    const parser = Readable.from(fileBuffer).pipe(
+      parse({
+        columns: true,
+        skip_empty_lines: true,
+        trim: true,
+      }),
+    );
+
+    for await (const record of parser) {
+      results.push(record);
+    }
+
+    const entities = await Promise.all(
+      results.map(async (record) => {
+        const guru = record as Guru;
+        // Hash password if it's plain text (not already hashed)
+        // In a real app we might want a default password or a specific format
+        if (guru.password && !guru.password.startsWith('$2')) {
+          const salt = await bcrypt.genSalt();
+          guru.password = await bcrypt.hash(guru.password, salt);
+        } else if (!guru.password) {
+          // Default password if not provided
+          const salt = await bcrypt.genSalt();
+          guru.password = await bcrypt.hash('password123', salt);
+        }
+        return guru;
+      }),
+    );
+
+    return this.guruRepository.save(entities);
   }
 }

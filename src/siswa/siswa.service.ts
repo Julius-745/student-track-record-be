@@ -2,6 +2,10 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Siswa } from './siswa.entity';
+import { parse } from 'csv-parse';
+import { Readable } from 'stream';
+import { CreateSiswaDto } from './dto/create-siswa.dto';
+import { UpdateSiswaDto } from './dto/update-siswa.dto';
 
 @Injectable()
 export class SiswaService {
@@ -68,12 +72,12 @@ export class SiswaService {
     return siswa;
   }
 
-  async create(createSiswaDto: any) {
+  async create(createSiswaDto: CreateSiswaDto) {
     const siswa = this.siswaRepository.create(createSiswaDto);
     return this.siswaRepository.save(siswa);
   }
 
-  async update(id: string, updateSiswaDto: any) {
+  async update(id: string, updateSiswaDto: UpdateSiswaDto) {
     const siswa = await this.findOne(id);
     this.siswaRepository.merge(siswa, updateSiswaDto);
     return this.siswaRepository.save(siswa);
@@ -82,5 +86,28 @@ export class SiswaService {
   async remove(id: string) {
     const siswa = await this.findOne(id);
     return this.siswaRepository.remove(siswa);
+  }
+
+  async importCsv(fileBuffer: Buffer) {
+    const results: any[] = [];
+    const parser = Readable.from(fileBuffer).pipe(
+      parse({
+        columns: true,
+        skip_empty_lines: true,
+        trim: true,
+      }),
+    );
+
+    for await (const record of parser) {
+      results.push(record);
+    }
+
+    const entities = results.map((record) => {
+      // Map CSV headers to entity fields if necessary
+      // For now, assume CSV headers match entity fields
+      return record as Siswa;
+    });
+
+    return this.siswaRepository.save(entities);
   }
 }

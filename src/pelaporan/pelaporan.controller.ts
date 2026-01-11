@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { PelaporanService } from './pelaporan.service';
 import { CreatePelaporanDto } from './dto/create-pelaporan.dto';
@@ -29,7 +30,15 @@ export class PelaporanController {
       query.jenis_pelaporan,
       query.orderBy,
       query.order,
+      query.startDate,
+      query.endDate,
     );
+  }
+
+  @Get('stats')
+  @ApiOperation({ summary: 'Get reporting statistics' })
+  getStats(@Query() query: { startDate?: string; endDate?: string }) {
+    return this.pelaporanService.getStats(query.startDate, query.endDate);
   }
 
   @Get(':id')

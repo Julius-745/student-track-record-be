@@ -8,7 +8,11 @@ import {
   Put,
   Query,
   UseGuards,
+  Req,
 } from '@nestjs/common';
+import { ApiConsumes, ApiBody, ApiOperation } from '@nestjs/swagger';
+import type { FastifyRequest } from 'fastify';
+import { MultipartFile } from '@fastify/multipart';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { Role } from 'src/auth/roles.enum';
@@ -34,7 +38,7 @@ export class SiswaController {
       query.order,
     );
   }
-  
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.siswaService.findOne(id);
@@ -44,6 +48,33 @@ export class SiswaController {
   @Post()
   create(@Body() dto: CreateSiswaDto) {
     return this.siswaService.create(dto);
+  }
+
+  @Roles(Role.ADMIN)
+  @Post('import')
+  @ApiOperation({ summary: 'Import siswa from CSV file' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  async import(@Req() req: FastifyRequest) {
+    const data = await (
+      req as FastifyRequest & { file: () => Promise<MultipartFile | undefined> }
+    ).file();
+    if (data) {
+      const multipartFile = data;
+      const buffer = await multipartFile.toBuffer();
+      return this.siswaService.importCsv(buffer);
+    }
+    throw new Error('File not found');
   }
 
   @Roles(Role.ADMIN)
