@@ -89,25 +89,74 @@ export class SiswaService {
   }
 
   async importCsv(fileBuffer: Buffer) {
-    const results: any[] = [];
+    const results: Record<string, any>[] = [];
     const parser = Readable.from(fileBuffer).pipe(
       parse({
         columns: true,
         skip_empty_lines: true,
         trim: true,
+        bom: true,
+        relax_quotes: true,
       }),
     );
 
     for await (const record of parser) {
-      results.push(record);
+      results.push(record as Record<string, any>);
     }
 
+    const batchSize = 100;
     const entities = results.map((record) => {
-      // Map CSV headers to entity fields if necessary
-      // For now, assume CSV headers match entity fields
-      return record as Siswa;
+      // Exclude ID to allow auto-generation
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { id, ...siswaData } = record;
+
+      // Clean up empty strings to null for optional fields
+      Object.keys(siswaData).forEach((key) => {
+        if (siswaData[key] === '') {
+          siswaData[key] = null;
+        }
+      });
+
+      return siswaData as Siswa;
     });
 
-    return this.siswaRepository.save(entities);
+    // Save in batches
+    const savedEntities: Siswa[] = [];
+    for (let i = 0; i < entities.length; i += batchSize) {
+      const batch = entities.slice(i, i + batchSize);
+      const savedBatch = await this.siswaRepository.save(batch);
+      savedEntities.push(...savedBatch);
+    }
+
+    return savedEntities;
+  }
+
+  downloadTemplate() {
+    const csvHeader = [
+      'rombel',
+      'nama',
+      'nipd',
+      'jenis_kelamin',
+      'nisn',
+      'tempat_lahir',
+      'tanggal_lahir',
+      'nik',
+      'agama',
+      'alamat',
+      'rt',
+      'rw',
+      'dusun',
+      'kelurahan',
+      'kecamatan',
+      'kode_pos',
+      'jenis_tinggal',
+      'alat_transportasi',
+      'no_hp',
+      'email',
+      'skhun',
+      'penerima_kps',
+      'no_kps',
+    ].join(',');
+    return Readable.from([csvHeader]);
   }
 }

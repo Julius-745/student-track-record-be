@@ -9,8 +9,16 @@ import {
   Query,
   UseGuards,
   Req,
+  Res,
+  StreamableFile,
 } from '@nestjs/common';
-import { ApiConsumes, ApiBody, ApiOperation } from '@nestjs/swagger';
+import type { Response } from 'express';
+import {
+  ApiConsumes,
+  ApiBody,
+  ApiOperation,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import type { FastifyRequest } from 'fastify';
 import { MultipartFile } from '@fastify/multipart';
 import { RolesGuard } from 'src/auth/roles.guard';
@@ -22,6 +30,7 @@ import { CreateSiswaDto } from './dto/create-siswa.dto';
 import { UpdateSiswaDto } from './dto/update-siswa.dto';
 import { SiswaQueryDto } from './dto/siswa-query.dto';
 
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('siswa')
 export class SiswaController {
@@ -87,5 +96,14 @@ export class SiswaController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.siswaService.remove(id);
+  }
+
+  @Roles(Role.ADMIN)
+  @Get('template/download')
+  @ApiOperation({ summary: 'Download template CSV for Siswa import' })
+  downloadTemplate(@Res({ passthrough: true }) res: Response) {
+    res.header('Content-Type', 'text/csv');
+    res.header('Content-Disposition', 'attachment; filename="template_siswa.csv"');
+    return new StreamableFile(this.siswaService.downloadTemplate());
   }
 }

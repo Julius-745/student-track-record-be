@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/require-await */
 import { DataSource } from 'typeorm';
 import { faker } from '@faker-js/faker';
 import { Siswa } from '../../siswa/siswa.entity';
@@ -19,7 +20,6 @@ const AppDataSource = new DataSource({
   synchronize: true, // Should be true for dev/seeding to ensure tables exist
 });
 
-// eslint-disable-next-line @typescript-eslint/require-await
 const generateSiswa = async (count: number) => {
   const siswaList: Siswa[] = [];
   const classes = ['7A', '7B', '7C', '8A', '8B', '8C', '9A', '9B', '9C'];
@@ -37,14 +37,10 @@ const generateSiswa = async (count: number) => {
   return siswaList;
 };
 
-const generateGuru = async (count: number) => {
-  const guruList: Guru[] = [];
-  const positions = ['Guru Mapel', 'Wali Kelas', 'Guru BK', 'Kepala Sekolah'];
+const generateAdmin = async () => {
   const salt = await bcrypt.genSalt();
-  const hashedPassword = await bcrypt.hash('password123', salt); // Default password
   const adminPassword = await bcrypt.hash('admin', salt);
 
-  // Create Admin
   const admin = new Guru();
   admin.nip = '9999999';
   admin.nama = 'Admin Sistem';
@@ -52,7 +48,15 @@ const generateGuru = async (count: number) => {
   admin.email = 'admin@sekolah.id';
   admin.password = adminPassword;
   admin.role = 'admin';
-  guruList.push(admin);
+
+  return admin;
+};
+
+const generateGuru = async (count: number) => {
+  const guruList: Guru[] = [];
+  const positions = ['Guru Mapel', 'Wali Kelas', 'Guru BK', 'Kepala Sekolah'];
+  const salt = await bcrypt.genSalt();
+  const hashedPassword = await bcrypt.hash('password123', salt); // Default password
 
   for (let i = 0; i < count; i++) {
     const guru = new Guru();
@@ -127,16 +131,21 @@ const seed = async () => {
     );
 
     // Seeding
+    console.log('Seeding Admin...');
+    const adminData = await generateAdmin();
+    await guruRepo.save(adminData);
+
     console.log('Seeding Siswa...');
     const siswaData = await generateSiswa(50); // 50 Students
     await siswaRepo.save(siswaData);
 
     console.log('Seeding Guru...');
-    const guruData = await generateGuru(10); // 10 Teachers + 1 Admin
+    const guruData = await generateGuru(10); // 10 Teachers
     await guruRepo.save(guruData);
 
     console.log('Seeding Pelaporan...');
-    const pelaporanData = await generatePelaporan(30, siswaData, guruData);
+    const allGuru = [adminData, ...guruData];
+    const pelaporanData = await generatePelaporan(30, siswaData, allGuru);
     await pelaporanRepo.save(pelaporanData);
 
     console.log('Seeding Configured Successfully!');
@@ -147,4 +156,4 @@ const seed = async () => {
   }
 };
 
-seed();
+void seed();

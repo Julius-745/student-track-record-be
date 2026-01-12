@@ -9,13 +9,14 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { PelaporanService } from './pelaporan.service';
 import { CreatePelaporanDto } from './dto/create-pelaporan.dto';
 import { UpdatePelaporanDto } from './dto/update-pelaporan.dto';
 import { PelaporanQueryDto } from './dto/pelaporan-query.dto';
 
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('pelaporan')
 export class PelaporanController {

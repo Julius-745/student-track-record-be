@@ -93,7 +93,7 @@ export class GuruService {
   }
 
   async importCsv(fileBuffer: Buffer) {
-    const results: any[] = [];
+    const results: Record<string, any>[] = [];
     const parser = Readable.from(fileBuffer).pipe(
       parse({
         columns: true,
@@ -103,12 +103,16 @@ export class GuruService {
     );
 
     for await (const record of parser) {
-      results.push(record);
+      results.push(record as Record<string, any>);
     }
 
     const entities = await Promise.all(
       results.map(async (record) => {
-        const guru = record as Guru;
+        // Exclude ID to allow auto-generation
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id, ...guruData } = record;
+        const guru = guruData as Guru;
+
         // Hash password if it's plain text (not already hashed)
         // In a real app we might want a default password or a specific format
         if (guru.password && !guru.password.startsWith('$2')) {
@@ -119,10 +123,23 @@ export class GuruService {
           const salt = await bcrypt.genSalt();
           guru.password = await bcrypt.hash('password123', salt);
         }
+
         return guru;
       }),
     );
 
     return this.guruRepository.save(entities);
+  }
+
+  downloadTemplate() {
+    const csvHeader = [
+      'nip',
+      'nama',
+      'posisi',
+      'email',
+      'password',
+      'role',
+    ].join(',');
+    return Readable.from([csvHeader]);
   }
 }

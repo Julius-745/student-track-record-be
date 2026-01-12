@@ -9,8 +9,16 @@ import {
   Query,
   UseGuards,
   Req,
+  Res,
+  StreamableFile,
 } from '@nestjs/common';
-import { ApiConsumes, ApiBody, ApiOperation } from '@nestjs/swagger';
+import type { Response } from 'express';
+import {
+  ApiConsumes,
+  ApiBody,
+  ApiOperation,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { MultipartFile } from '@fastify/multipart';
 import type { FastifyRequest } from 'fastify';
 import { UpdateGuruDto } from './dto/update-guru.dto';
@@ -22,6 +30,7 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { GuruService } from './guru.service';
 import { RolesGuard } from 'src/auth/roles.guard';
 
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.ADMIN)
 @Controller('guru')
@@ -84,5 +93,13 @@ export class GuruController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.guruService.remove(id);
+  }
+
+  @Get('template/download')
+  @ApiOperation({ summary: 'Download template CSV for Guru import' })
+  downloadTemplate(@Res({ passthrough: true }) res: Response) {
+    res.header('Content-Type', 'text/csv');
+    res.header('Content-Disposition', 'attachment; filename="template_guru.csv"');
+    return new StreamableFile(this.guruService.downloadTemplate());
   }
 }

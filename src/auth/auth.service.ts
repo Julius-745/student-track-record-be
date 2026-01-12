@@ -37,7 +37,7 @@ export class AuthService {
     return null;
   }
 
-  async login(user: Omit<Guru, 'password'>) {
+  login(user: Omit<Guru, 'password'>) {
     const payload = { username: user.email, sub: user.id, role: user.role };
     return {
       accessToken: this.jwtService.sign(payload, { expiresIn: '1h' }),
@@ -48,7 +48,11 @@ export class AuthService {
 
   async refresh(refreshToken: string) {
     try {
-      const payload = this.jwtService.verify(refreshToken);
+      const payload = this.jwtService.verify<{
+        sub: string;
+        username: string;
+        role: string;
+      }>(refreshToken);
       const user = await this.guruService.findOne(payload.sub);
 
       if (!user) {
@@ -67,7 +71,7 @@ export class AuthService {
         accessToken: this.jwtService.sign(newPayload, { expiresIn: '1h' }),
         user: userWithoutPassword,
       };
-    } catch (e) {
+    } catch {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
