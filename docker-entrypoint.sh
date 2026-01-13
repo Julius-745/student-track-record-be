@@ -8,4 +8,4 @@ if [ -z "$JWT_SECRET" ]; then
 fi
 
 # Run the application
-exec bun run dist/main.js
+exec bun run dist/src/main.js
