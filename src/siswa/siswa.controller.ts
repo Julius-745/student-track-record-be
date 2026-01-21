@@ -49,8 +49,11 @@ export class SiswaController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.siswaService.findOne(id);
+  findOne(
+    @Param('id') id: string,
+    @Query('jenis_pelaporan') jenis_pelaporan?: string,
+  ) {
+    return this.siswaService.findOne(id, jenis_pelaporan);
   }
 
   @Roles(Role.ADMIN)
@@ -103,7 +106,10 @@ export class SiswaController {
   @ApiOperation({ summary: 'Download template CSV for Siswa import' })
   downloadTemplate(@Res({ passthrough: true }) res: Response) {
     res.header('Content-Type', 'text/csv');
-    res.header('Content-Disposition', 'attachment; filename="template_siswa.csv"');
+    res.header(
+      'Content-Disposition',
+      'attachment; filename="template_siswa.csv"',
+    );
     return new StreamableFile(this.siswaService.downloadTemplate());
   }
 }

@@ -3,58 +3,66 @@ import {
   FastifyAdapter,
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
-import cookie from '@fastify/cookie';
-import multipart from '@fastify/multipart';
+import fastifyCookie from '@fastify/cookie';
+import fastifyMultipart from '@fastify/multipart';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule,
-    new FastifyAdapter(),
-  );
-
-  // Register cookie plugin
-  await app.register(cookie, {
-    secret: process.env.COOKIE_SECRET || 'cookie-secret', // for signed cookies
+  const adapter = new FastifyAdapter({
+    trustProxy: true,
   });
 
-  // Register multipart plugin
-  await app.register(multipart, {
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    adapter,
+  );
+
+  app.enableCors({
+    origin: [
+      'http://localhost:5173',
+      'https://sp3i-spanex.domcloud.dev',
+      'https://www.sp3i-spanex.domcloud.dev',
+      'https://student-report.domcloud.dev',
+      'https://www.student-report.domcloud.dev',
+    ],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+    credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  });
+
+  await app.register(fastifyCookie, {
+    secret: process.env.COOKIE_SECRET || 'cookie-secret',
+  });
+
+  await app.register(fastifyMultipart, {
     limits: {
-      fieldNameSize: 100, // Max field name size in bytes
-      fieldSize: 100, // Max field value size in bytes
-      fields: 10, // Max number of non-file fields
-      fileSize: 10 * 1024 * 1024, // 10MB
-      files: 1, // Max number of file fields
+      fileSize: 10 * 1024 * 1024,
+      files: 1,
     },
   });
 
-  // Enable CORS
-  app.enableCors({
-    origin: true, // Reflect the request origin
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    credentials: true,
-    allowedHeaders: 'Content-Type, Accept, Authorization',
-  });
-
-  // Global Validation Pipe
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
-  // Set global prefix
   app.setGlobalPrefix('api');
 
   const config = new DocumentBuilder()
     .setTitle('Student Track Record API')
-    .setDescription('API documentation for the Student Track Record system')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
+
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  await app.listen(3000, '0.0.0.0');
-  console.log(`Application is running on: ${await app.getUrl()}`);
+  // IMPORTANT for Fastify + Swagger
+  await app.init();
+
+  const port = Number(process.env.PORT) || 3000;
+  await app.listen(port, '0.0.0.0');
 }
-void bootstrap();
+
+bootstrap();

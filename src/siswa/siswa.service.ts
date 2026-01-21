@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Siswa } from './siswa.entity';
+import { Pelaporan } from '../pelaporan/pelaporan.entity';
 import { parse } from 'csv-parse';
 import { Readable } from 'stream';
 import { CreateSiswaDto } from './dto/create-siswa.dto';
@@ -56,20 +57,46 @@ export class SiswaService {
     };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, jenis_pelaporan?: string) {
     const siswa = await this.siswaRepository.findOne({
       where: { id },
-      relations: ['pelaporans', 'pelaporans.guru'],
-      order: {
-        pelaporans: {
-          tanggal: 'DESC',
-        },
-      },
     });
+
     if (!siswa) {
       throw new NotFoundException(`Siswa with ID ${id} not found`);
     }
-    return siswa;
+
+    // Fetch filtered pelaporans for the list
+    const pelaporanRepo = this.siswaRepository.manager.getRepository(Pelaporan);
+    const queryBuilder = pelaporanRepo
+      .createQueryBuilder('pelaporan')
+      .leftJoinAndSelect('pelaporan.guru', 'guru')
+      .where('pelaporan.id_siswa = :id', { id })
+      .orderBy('pelaporan.tanggal', 'DESC');
+
+    if (jenis_pelaporan) {
+      queryBuilder.andWhere('pelaporan.jenis_pelaporan = :jenis_pelaporan', {
+        jenis_pelaporan,
+      });
+    }
+
+    const pelaporans = await queryBuilder.getMany();
+
+    // Fetch global totals (independent of filter)
+    const totalPelanggaran = await pelaporanRepo.count({
+      where: { siswaId: id, jenis_pelaporan: 'pelanggaran' },
+    });
+
+    const totalPrestasi = await pelaporanRepo.count({
+      where: { siswaId: id, jenis_pelaporan: 'prestasi' },
+    });
+
+    return {
+      ...siswa,
+      pelaporans,
+      totalPelanggaran,
+      totalPrestasi,
+    };
   }
 
   async create(createSiswaDto: CreateSiswaDto) {

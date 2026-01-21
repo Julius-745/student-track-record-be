@@ -6,43 +6,18 @@ services:
     container_name: student-track-api
     restart: always
     ports:
-      - '3000:3000'
+      - '32001:3000'
     environment:
       - NODE_ENV=production
       - PORT=3000
       - DB_HOST=10.0.2.2
       - DB_PORT=5432
-      - DB_USERNAME=${DB_USERNAME:-postgres}
-      - DB_PASSWORD=${DB_PASSWORD:-postgres}
-      - DB_NAME=${DB_NAME:-student_track_record}
-      - JWT_SECRET=${JWT_SECRET:-supersecretkey}
-    depends_on:
-      db:
-        condition: service_healthy
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - JWT_SECRET=${JWT_SECRET}
     networks:
       - app-network
-
-  db:
-    image: postgres:16-alpine
-    container_name: student-track-db
-    restart: always
-    environment:
-      - POSTGRES_USER=${DB_USERNAME:-postgres}
-      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
-      - POSTGRES_DB=${DB_NAME:-student_track_record}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-volumes:
-  postgres_data:
-    driver: local
 
 networks:
   app-network:

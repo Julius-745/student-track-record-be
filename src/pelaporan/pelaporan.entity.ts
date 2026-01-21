@@ -7,7 +7,6 @@ import {
   CreateDateColumn,
 } from 'typeorm';
 import { Siswa } from '../siswa/siswa.entity';
-import { Guru } from '../guru/guru.entity';
 
 @Entity('pelaporan')
 export class Pelaporan {
@@ -21,9 +20,11 @@ export class Pelaporan {
   @Column({ name: 'id_siswa' })
   siswaId: string;
 
-  @ManyToOne(() => Guru, (guru) => guru.pelaporans, { onDelete: 'SET NULL' })
+  // Use string reference instead of direct import
+  @ManyToOne('Guru', 'pelaporans', { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'id_guru' })
-  guru: Guru | null;
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+  guru: any | null;
 
   @Column({ name: 'id_guru', nullable: true })
   guruId: string;

@@ -15,59 +15,70 @@ const AppDataSource = new DataSource({
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_NAME || 'student_track_record',
   entities: [Guru, Siswa, Pelaporan],
-  synchronize: true,
+  synchronize: false, // Changed to false for production safety
 });
 
+const ADMIN_PASSWORD = 'admin'; // Clear constant for the password
+
 const generateAdmin = async () => {
-  const salt = await bcrypt.genSalt();
-  const adminPassword = await bcrypt.hash('admin', salt);
+  const salt = await bcrypt.genSalt(10);
+  const adminPassword = await bcrypt.hash(ADMIN_PASSWORD, salt);
 
   const admin = new Guru();
   admin.nip = '9999999';
   admin.nama = 'Admin Sistem';
   admin.posisi = 'Administrator';
-  admin.email = 'admin@sekolah.id';
+  admin.email = 'admin@spanex.com';
   admin.password = adminPassword;
   admin.role = 'admin';
 
   return admin;
 };
 
-const seedAdmin = async () => {
+export const seedAdmin = async () => {
   try {
+    console.log('Connecting to database...');
+    console.log(`DB Host: ${process.env.DB_HOST}`);
+    console.log(`DB Name: ${process.env.DB_NAME}`);
+
     await AppDataSource.initialize();
-    console.log('Database connected for admin seeding...');
+    console.log('✓ Database connected for admin seeding...');
 
     const guruRepo = AppDataSource.getRepository(Guru);
 
     // Check if admin already exists
     const existingAdmin = await guruRepo.findOne({
-      where: { email: 'admin@sekolah.id' },
+      where: { email: 'admin@spanex.com' },
     });
 
     if (existingAdmin) {
-      console.log('Admin user already exists. Updating password...');
-      const salt = await bcrypt.genSalt();
-      const adminPassword = await bcrypt.hash('admin', salt);
+      console.log('⚠ Admin user already exists. Updating password...');
+      const salt = await bcrypt.genSalt(10);
+      const adminPassword = await bcrypt.hash(ADMIN_PASSWORD, salt);
       existingAdmin.password = adminPassword;
       await guruRepo.save(existingAdmin);
-      console.log('Admin password updated successfully!');
+      console.log('✓ Admin password updated successfully!');
     } else {
-      console.log('Creating Admin user...');
+      console.log('Creating new Admin user...');
       const adminData = await generateAdmin();
       await guruRepo.save(adminData);
-      console.log('Admin user created successfully!');
+      console.log('✓ Admin user created successfully!');
     }
 
-    console.log('\nAdmin credentials:');
-    console.log('Email: admin@sekolah.id');
-    console.log('Password: admin');
+    console.log('\n========================================');
+    console.log('Admin credentials:');
+    console.log(`Email: admin@spanex.com`);
+    console.log(`Password: ${ADMIN_PASSWORD}`);
+    console.log('========================================\n');
 
+    await AppDataSource.destroy();
     process.exit(0);
   } catch (error) {
-    console.error('Error during admin seeding:', error);
+    console.error('❌ Error during admin seeding:', error);
+    await AppDataSource.destroy();
     process.exit(1);
   }
 };
 
-void seedAdmin();
+// Run the seeder
+seedAdmin();

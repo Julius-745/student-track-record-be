@@ -99,7 +99,10 @@ export class GuruController {
   @ApiOperation({ summary: 'Download template CSV for Guru import' })
   downloadTemplate(@Res({ passthrough: true }) res: Response) {
     res.header('Content-Type', 'text/csv');
-    res.header('Content-Disposition', 'attachment; filename="template_guru.csv"');
+    res.header(
+      'Content-Disposition',
+      'attachment; filename="template_guru.csv"',
+    );
     return new StreamableFile(this.guruService.downloadTemplate());
   }
 }
